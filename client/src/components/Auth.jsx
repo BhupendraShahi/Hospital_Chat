@@ -4,6 +4,8 @@ import axios from 'axios';
 
 import signinImage from '../assets/signup.jpg';
 
+const cookies = new Cookies();
+
 const initialState = {
     fullName: '',
     username: '',
@@ -20,9 +22,39 @@ const Auth = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
-    const handleSubmit = (e) => {
+
+    //when the form is submitted, we will get all the data int he handle submit function.
+    //get the URL
+    //make a request to our backend passing all the form data
+    // then we will get some data back(token,userID,hashedpassword) from the backend
+    //which we are storing in the cookies
+    //then we are reloading the the window because when we reload it
+    //the next time we wont go into auth window and will directly log in to the chat
+    //because now we'll have our auth token
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(form);
+        
+        const { fullName, username, password, phoneNumber, avatarURL } = form;
+
+        const URL = 'http://localhost:5000/auth';
+
+        const { data: { token, userId, hashedPassword } } = await axios.post(`${URL}/${isSignup ? 'signup' : 'login'}`, {
+            username, password, fullName, phoneNumber, avatarURL,
+        });
+
+        cookies.set('token', token);
+        cookies.set('username', username);
+        cookies.set('fullName', fullName);
+        cookies.set('userId', userId);
+
+        if (isSignup) {
+            cookies.set('phoneNumber', phoneNumber);
+            cookies.set('avatarURL', avatarURL);
+            cookies.set('hashedPassword', hashedPassword);
+        }
+
+        window.location.reload();
+
     }
     
     const switchMode = () => {
